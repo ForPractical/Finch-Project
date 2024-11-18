@@ -1,0 +1,154 @@
+---
+title: "AssignmentQuarto"
+format:
+  html:
+    self-contained: true
+output: html_document
+---
+Figures:
+##Figure 1
+```{r}
+renv::init()
+renv::restore()
+library(Sleuth3)
+library(dplyr)
+library(ggplot2)
+library(viridis)
+str(case0201)
+case0201$Year <- factor(case0201$Year, levels = c(1976, 1978))
+
+Figure_1 <- ggplot(case0201, aes(x = Year, y = Depth, color = factor(Year))) +
+  geom_jitter(width = 0.1, alpha = 0.7) +  #Add jittered points
+  scale_color_viridis(discrete = TRUE) +    #Use viridis color palette
+  theme_minimal() +
+  labs(
+    title = "Figure 1: Beak Depths of Finches Before and After the Drought",
+    x = "Year",
+    y = "Beak Depth (mm)",
+    color = "Year"
+  )
+
+ggsave("Figure_1.png", plot = Figure_1, width = 6, height = 4)
+```
+
+##Figue 2
+```{r}
+FinchModel <- lm(Depth ~ Year, data = case0201)
+summary(FinchModel)
+residuals <- resid(FinchModel)
+fitted_values <- fitted(FinchModel)
+library(gridExtra)
+
+hist_plot <- ggplot(data.frame(residuals), aes(x = residuals)) +
+  geom_histogram(bins = 20, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Residuals", x = "Residuals", y = "Frequency") +
+  theme_minimal()
+
+qq_plot <- ggplot(data.frame(residuals), aes(sample = residuals)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Q-Q Plot of Residuals") +
+  theme_minimal()
+
+residuals_vs_fitted <- ggplot(data.frame(fitted_values, residuals), aes(x = fitted_values, y = residuals)) +
+  geom_point(alpha = 0.6, color = "darkblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted Values", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+Figure_2 <- grid.arrange(hist_plot, qq_plot, residuals_vs_fitted, nrow = 1, top = "Figure 2: assessment of the normality and heteroscedasticity of the residuals")
+ggsave("Figure_2.png", plot = Figure_2, width = 6, height = 4)
+```
+
+##Figue 3
+```{r}
+anova(FinchModel)
+
+summary_stats <- case0201 %>%
+  group_by(Year) %>%
+  summarise(
+    mean_beak_depth = mean(Depth),
+    se = sd(Depth) / sqrt(n())  #Standard error
+  )
+
+Figure_3 <-ggplot(summary_stats, aes(x = Year, y = mean_beak_depth)) +
+  geom_bar(stat = "identity", fill = "skyblue", alpha = 0.7, width = 0.6) +  #Bar for mean
+  geom_errorbar(
+    aes(ymin = mean_beak_depth - 2*se, ymax = mean_beak_depth + 2*se),
+    width = 0.2, color = "black"
+  ) +  # Add error bars
+  geom_jitter(data = case0201, aes(x = Year, y = Depth), 
+              width = 0.2, size = 2, alpha = 0.6, color = "red") +  #Raw data points
+  labs(
+    title = "Figure 3: Beak Depths of Finches Before and After the Drought",
+    x = "Year",
+    y = "Beak Depth (mm)",
+    color = "Year"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggsave("Figure_3.png", plot = Figure_3, width = 6, height = 4)
+
+```
+
+Table:
+##Table 1
+```{r}
+library(broom)
+library(dplyr)
+library(kableExtra)
+library(scales)
+
+tidy_FinchModel <- tidy(FinchModel)
+Table_1 <- tidy_FinchModel %>%
+  mutate(
+    estimate = round(estimate, 3),              
+    statistic = round(statistic, 3),            
+    std.error = round(std.error, 3),      
+    p.value = scientific(p.value, digits = 3) 
+  ) %>%
+  rename(
+    "Estimate" = estimate,           
+    "Statistic" = statistic,         
+    "P Value" = p.value,
+    "Standard Error" = std.error
+  )
+  
+Table_1$term[Table_1$term == "Year1978"] <- "Year"
+
+#Create a table
+kable(Table_1, caption = "Table 1: Linear Model Summary") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+##Table 2
+```{r}
+#Perform ANOVA
+anova_result <- aov(Depth ~ Year, data = case0201)
+summary(anova_result)
+
+#Tidy the ANOVA results
+tidy_anova <- tidy(anova_result) %>%
+  mutate(
+    sumsq = round(sumsq, 3),              #Round Sum of Squares
+    meansq = round(meansq, 3),            #Round Mean Square
+    statistic = round(statistic, 3),      #Round F Statistic
+    p.value = scientific(p.value, digits = 3) #Format P Value in scientific notation
+  ) %>%
+  rename(
+    "Term" = term,                        #Rename for better readability
+    "Df" = df,
+    "Sum of Squares" = sumsq,
+    "Mean Square" = meansq,
+    "F Statistic" = statistic,
+    "P Value" = p.value
+  ) %>%
+  select(Term, Df, `Sum of Squares`, `Mean Square`, `F Statistic`, `P Value`) #Select and reorder columns
+
+#Create a formatted table
+tidy_anova %>%
+  kable(caption = "Table 2: ANOVA Results for Beak Depth") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```

@@ -1,0 +1,85 @@
+---
+title: "FinchReport"
+format:
+  html:
+    self-contained: true
+    embed-resources: true
+output: html_document
+---
+
+#Introduction
+
+The beak morphology of medium ground finch (*Geospiza fortis*) is measured regularly on the Galapagos Island of Daphne Major and is thought to be consistently under natural selection. The study aims to analyse if the beak depth of the medium ground finch responded to natural selection when the finches underwent a severe drought in 1977, when the finches only had large, tough seeds available to eat, given that they usually ignored these seeds before the drought.
+
+#Methods - statistical analysis
+
+The data used in this study was collected from a random sample of 89 finches before (in 1976) and after the drought (1978). The data has two categorical variables, 1976 and 1978, and one numerical variable, the beak depth. The beak depth was measured in millimeters (mm). In the data analysis, the raw data values were plotted at first for data visualization (see Figure 1 below). After testing the normality and heteroscedasticity of the residuals, a linear model was created based on the data, and further statistical analysis was performed using the ANOVA statistical model.
+
+#Results
+
+The distribution of residuals is approximately normal in the histogram (Figure 2 below), although mild deviations are observed in the Q-Q plot at extreme values. The variances across each group (1976 and 1978 in this case) is approximately equal as shown the plot of residuals versus fitted values. The assumptions of the linear model and ANOVA test are met: random sample, normal distribution, and homoscedasticity. The linear model was created based on the data collected in the study and summarized in Table 1. Both the slope and intercept are statistically significant. The ANOVA results (shown in Figure 3 and summarized in Table 2 below) show statistically significant difference in the beak depth of the two groups, and this suggests that the distribution of beak depth shifted in response to the drought under natural selection. Since the slope of the linear model is statistically significant and positive (0.669>0, shown in Table 1 below), it is reasonable to conclude that the beak depth increased from 1976 to 1978 in response to the drought.
+
+#Conclusion
+
+The study aims to investigate the beak morphology of the medium ground finch under the natural selection and specifically, how the beak depth of the finches responded to the drought in 1977. After careful statistical analysis, we can conclude that the distribution of beak depth (mm) changed before (in 1976) and after the drought (in 1978), and the beak depth increased significantly. That suggests that beak depth of the finches was under natural selection when the only food available was the large, tough seeds during the drought.
+
+#Figures
+
+![Figure 1](Figure_1.png)
+
+![Figure 2](Figure_2.png)
+
+![Figure 3](Figure_3.png)
+
+
+
+
+
+
+#Table
+
+##Table 1:
+```{r}
+#| echo: false
+Table_1 <- data.frame(
+  term = c("(Intercept)", "Year"),
+  Estimate = c(9.470, 0.669),
+  `Standard Error` = c(0.103, 0.146),
+  Statistic = c(91.812, 4.583),
+  `P Value` = c("1.34e-150", "8.65e-06")
+)
+
+
+# Load knitr for table formatting
+library(knitr)
+
+#Replace dots with spaces in column names
+colnames(Table_1) <- gsub("\\.", " ", colnames(Table_1))
+
+# Display the table
+kable(Table_1, caption = "Table 1: Linear Model Summary")
+```
+
+
+
+
+
+##Table 2
+```{r}
+#| echo: false
+Table_2 <- data.frame(
+  Term = c("Year", "Residuals"),
+  Df = c(1, 176),
+  `Sum of Squares` = c(19.889, 166.638),
+  `Mean.Square` = c(19.889, 0.947),
+  `F.Statistic` = c(21.006, NA),
+  `P.Value` = c(8.65e-06, NA)
+)
+
+#Replace dots with spaces in column names
+colnames(Table_2) <- gsub("\\.", " ", colnames(Table_2))
+
+library(knitr)
+
+kable(Table_2, caption = "Table 2: Summary of ANOVA Results for Beak Depth")
+```
